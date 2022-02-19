@@ -1,18 +1,20 @@
-"""Importanto as bibliotecas"""
+"""
+Importanto as bibliotecas
+Precisa instalar a biblioteca pandas, então use o código de pip abaixo sem o #: 
+"""
 import requests #Faz o request
 from bs4 import BeautifulSoup #Faz a procura e seleciona arquivos da web
-
 from urllib .error import HTTPError, URLError #Para tratar erros HTTP e de URL
 
-"""Precisa instalar a biblioteca pandas, então use o código abaixo sem o #: """
 #pip install pandas
 import pandas as pd
 
-"""
-Pasando a página e o requests.get, também serve para fazer post
-Tratando erros com Try e Except em HTTP e URL
-"""
+
 try:
+     """
+     Pasando a página e o requests.get, também serve para fazer post
+     Tratando erros com Try e Except em HTTP e URL
+     """
      url =r'https://g1.globo.com' #passo uma página de teste 
      response = requests.get(url) #Faço o request
      print('--------------------------------- ↓↓ CONEXÃO ↓↓ ---------------------------------')
@@ -23,16 +25,15 @@ except HTTPError as erroH:
 except URLError as erroU:
      print(erroU)
 
-"""
-Adiciono toda a resposta em um conteudo que será utilizado pelo BeautifulSoup
-"""
+
 content = response.content
 html = BeautifulSoup(content, 'html.parser')
-
-"""Crio as Listas para terem as máterias adicionadas junto com títulos e sublinks"""
 materia =[]
-submateria =[]
-linkm =[]
+
+"""
+Adiciono toda a resposta em um conteudo que será utilizado pelo BeautifulSoup
+Crio as Listas para terem as máterias adicionadas junto com títulos e sublinks
+"""
 
 
 def gera_noticias():
@@ -50,44 +51,39 @@ def gera_noticias():
           print(f'Título: {titulo.text}') #exibe o titulo da matéria
           print(f'Link: {titulo["href"]}') #exibe o link da página
 
-          materia.append(titulo.text) #adiciona lista o titulo
-          linkm.append(titulo['href']) #adiciona a lista o link
-          
           #Aqui irá criar um atributo que recebe o subtitulo se houver, caso negativorecebe um sem subtitulo*
           subtitulo = noticia.find('a', attrs ={'class':'bstn-relatedtext'})
           if subtitulo is not None:
                print(f'Subtitulo: {subtitulo.text}')
-               submateria.append(subtitulo.text)
+               
+               materia.append([titulo.text, subtitulo.text, titulo['href']]) #adiciona uma lista contendo uma lista com o titulo, subtitulo e linkl
           else:
-               submateria.append('Sem subtítulo')
+               materia.append([titulo.text, 'Sem Subtitulo', titulo['href']]) # Opção que substitui o subtitulo caso não tenha
              
 
-"""
-Função que gera um DataFrame com pandas e posteriormente gera um CSV, 
-é uma função que depende da função gerar_noticias()
-"""
+
 def gerar_csv():
-
-     """Com as máterias adicionadas nas listas, gero um DataFrame atráves de um dicionário.
-     Também é feito um tratamento de erros"""
+     """
+     Função que gera um DataFrame com pandas e posteriormente gera um CSV, 
+     é uma função que depende da função gerar_noticias()
+     
+     Com as máterias adicionadas nas listas, gero um DataFrame atráves de lista de listas
+     Também é feito um tratamento de erros
+     """
      try:
-          conjunto = pd.DataFrame({
-               'Titulo':materia,
-               'Subtitulo': submateria,
-               'Link':linkm
-          })
-
-          conjunto.to_csv('link_noticias.csv') #aqui finalmente gero o csv
+          conjunto = pd.DataFrame(materia, columns=['Titulo', 'Subtitulo', 'Links'])#crio o dataframe
+          conjunto.to_csv('link_noticias.csv', index=False) #aqui finalmente gero o csv e o index é False, retira o 0,1,2,3...n
      except FileNotFoundError as e:
           print(e)
      except AttributeError as atre:
           print('Nada foi denifido')
           raise atre
+     return conjunto #Retorna o datafreme caso queira ver dando print no metodo
 
-#testes no seu módulo main
-if __name__ == '__main__':
+
+if __name__ == '__main__':#testes no seu módulo main
      gera_noticias()
-     gerar_csv()
+     print(gerar_csv())
 
 
 
